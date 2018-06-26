@@ -1,0 +1,66 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:camel="http://camel.apache.org/schema/spring"
+       xmlns:util="http://www.springframework.org/schema/util"
+       xmlns:http="http://cxf.apache.org/transports/http/configuration"
+       xmlns:jaxrs="http://cxf.apache.org/jaxrs"
+       xmlns:cxf="http://cxf.apache.org/core"
+
+       xsi:schemaLocation="
+           http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+           http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.0.xsd
+           http://cxf.apache.org/transports/http/configuration http://cxf.apache.org/schemas/configuration/http-conf.xsd
+           http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd
+           http://cxf.apache.org/jaxrs http://cxf.apache.org/schemas/jaxrs.xsd
+           http://cxf.apache.org/core http://cxf.apache.org/schemas/core.xsd
+           ">
+
+    <!-- The following imports are required to configure CXF. cxf-servlet is imported to configure CXF to run with
+         servlet support. This allows us to use Tomcat with the CXFServlet instead of using CXF with a standalone
+         Jetty server. -->
+
+    <import resource="classpath:META-INF/cxf/cxf.xml"/>
+ <!--   <import resource="classpath:META-INF/cxf/cxf-extension-soap.xml"/>-->
+    <import resource="classpath:META-INF/cxf/cxf-servlet.xml"/>
+
+
+    <!-- Camel context -->
+    <camel:camelContext id="camelContext">
+        <camel:jmxAgent id="agent" disabled="true"/>
+    </camel:camelContext>
+
+
+
+    <!-- JAX-RS Definitions. -->
+    <jaxrs:server id="registryResources" address="/registry" staticSubresourceResolution="true">
+        <jaxrs:providers>
+            <ref bean="jsonProvider"/>
+        </jaxrs:providers>
+        <jaxrs:serviceBeans>
+            <bean class="com.poc.rest.RegistryResource"/>
+        </jaxrs:serviceBeans>
+    </jaxrs:server>
+
+    <bean id="jsonProvider" class="org.apache.cxf.jaxrs.provider.json.JSONProvider">
+        <property name="convention" value="mapped"/>
+        <property name="ignoreNamespaces" value="false"/>
+        <property name="dropRootElement" value="false"/>
+        <property name="namespaceMap">
+            <util:map map-class="java.util.HashMap">
+                <entry key="http://www.w3.org/1999/xlink" value="xlink"/>
+                <entry key="http://www.openehealth.org/ipf/xds" value="xds"/>
+            </util:map>
+        </property>
+    </bean>
+
+    <!-- Configure CXF Communications. -->
+    <cxf:bus>
+        <cxf:inInterceptors>
+            <bean class="org.apache.cxf.interceptor.LoggingInInterceptor"/>
+        </cxf:inInterceptors>
+        <cxf:outInterceptors>
+            <bean class="org.apache.cxf.interceptor.LoggingOutInterceptor"/>
+        </cxf:outInterceptors>
+    </cxf:bus>
+
+</beans>
